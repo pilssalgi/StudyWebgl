@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+  <style>body, html {
+    width: 100%;
+    padding: 0px;
+    margin: 0px
+  }</style>
+</head>
+<body>
+<canvas id="glCanvas" ></canvas>
+<script>
+  var gl, keys = 'webgl,experimental-webgl,webkit-3d,moz-webgl'.split(','), i = keys.length
+  var cvs = document.getElementById('glCanvas')
+  while (i--) if (gl = cvs.getContext(keys[i])) break
+  if (gl) console.log('webgl 초기화 성공!')
+  else console.log('webgl 초기화 실패!')
+
+  // Vertex Buffer
+  var triangleData = [
+      0.0, 1, 0.0,
+      -1, -1, 0.0,
+      1, -1, 0.0
+  ]
+  var scale = 0.2;
+  for(var i=0; i<triangleData.length; i++){
+    triangleData[i] = triangleData[i]*scale;
+  }
+
+  var triangleBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(triangleData), gl.STATIC_DRAW)
+  triangleBuffer.itemSize = 3
+  triangleBuffer.numItem = 3
+
+  
+
+  // Vertex Shader
+  var vertexShaderStr = ""+
+  "attribute vec3 aVertexPosition;" +
+  "void main(void) {" +
+  " gl_Position = vec4(aVertexPosition, 1.0);" +
+  "}"
+
+  var vertexShader = gl.createShader(gl.VERTEX_SHADER)
+  gl.shaderSource(vertexShader, vertexShaderStr)
+  gl.compileShader(vertexShader)
+  console.log(vertexShader)
+
+  // Fragment Shader
+  var fragmentShaderStr = ""+
+  "void main(void) {" +
+  " gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);" +
+  "}"
+  var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
+  gl.shaderSource(fragmentShader, fragmentShaderStr)
+  gl.compileShader(fragmentShader)
+  console.log(fragmentShader)
+
+  var firstProgram = gl.createProgram()
+  gl.attachShader(firstProgram, vertexShader)
+  gl.attachShader(firstProgram, fragmentShader)
+  gl.linkProgram(firstProgram)
+  console.log(firstProgram)
+
+  firstProgram.aVertexPosition = gl.getAttribLocation(firstProgram, "aVertexPosition");
+
+
+  if(cvs)  cvs.width=window.innerWidth, cvs.height=window.innerHeight;
+  gl.viewport(0, 0, parseInt(cvs.width), +parseInt(cvs.height));
+  gl.clearColor(Math.random(), Math.random(), Math.random(), 1)
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+  function render(){
+    // gl.clearColor(Math.random(), Math.random(), Math.random(), 1)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(firstProgram)
+    gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuffer);
+    gl.enableVertexAttribArray(firstProgram.aVertexPosition);
+    // console.log(triangleBuffer);
+    gl.vertexAttribPointer(firstProgram.aVertexPosition, triangleBuffer.itemSize, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, triangleBuffer.numItem);
+    requestAnimationFrame(render);
+  }
+
+  window.addEventListener('resize',function(){
+    if(cvs)  cvs.width=window.innerWidth, cvs.height=window.innerHeight;
+    gl.viewport(0, 0, parseInt(cvs.width), +parseInt(cvs.height));
+    gl.clearColor(Math.random(), Math.random(), Math.random(), 1)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+  },false)
+  
+
+  requestAnimationFrame(render);
+</script>
+
+</body>
+</html>
